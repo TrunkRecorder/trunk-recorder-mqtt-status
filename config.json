@@ -1,0 +1,28 @@
+{
+    "ver": 2,
+
+    "sources":   [{
+        "center": 855700000,
+        "rate": 2048000,
+        "error": -300,
+        "gain": 42,
+        "digitalRecorders": 4,
+        "driver": "osmosdr"
+    }
+    ],
+    "systems": [{
+        "control_channels": [855462500],
+        "type": "p25",
+        "shortName": "dcfems",
+        "modulation": "qpsk"
+    }],
+    "plugins": [
+    {
+        "name": "example plugin",
+        "library": "libmqtt_plugin.so",
+        "broker": "tcp://io.adafruit.com:1883",
+        "topic": "robotastic/feeds",
+        "username": "robotastic",
+        "password": "" 
+    }]
+}
