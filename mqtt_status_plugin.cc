@@ -63,14 +63,14 @@ protected:
   }
 
 public:
-  void connection_lost(const string &cause)
+  void connection_lost(const string &cause) override
   {
     cout << "\nConnection lost" << endl;
     if (!cause.empty())
       cout << "\tcause: " << cause << endl;
   }
 
-  void delivery_complete(mqtt::delivery_token_ptr tok)
+  void delivery_complete(mqtt::delivery_token_ptr tok) override
   {
     cout << "\tDelivery complete for token: "
          << (tok ? tok->get_message_id() : -1) << endl;
@@ -82,7 +82,7 @@ public:
    * programs where a client connects and pushes data for logging, stress/load
    * testing, etc.
    */
-  int system_rates(std::vector<System *> systems, float timeDiff)
+  int system_rates(std::vector<System *> systems, float timeDiff) override
   {
     boost::property_tree::ptree nodes;
 
@@ -237,7 +237,7 @@ public:
     return send_object(system->get_stats(), "system", "system");
   }
 
-  int calls_active(std::vector<Call *> calls)
+  int calls_active(std::vector<Call *> calls) override
   {
 
     boost::property_tree::ptree node;
@@ -267,13 +267,13 @@ public:
     return send_object(node, "recorders", "recorders");
   }
 
-  int call_start(Call *call)
+  int call_start(Call *call) override
   {
 
     return send_object(call->get_stats(), "call", "call_start");
   }
 
-  int call_end(Call_Data_t call_info)
+  int call_end(Call_Data_t call_info) override
   {
 
     return 0;
@@ -318,7 +318,7 @@ public:
     return 0; 
   }
 
-  int poll_one()
+  int poll_one() override
   {
     /*if (m_reconnect && (reconnect_time - time(NULL) < 0)) {
       reopen_stat();
@@ -366,39 +366,40 @@ public:
     }
   }
 
-  int init(Config *config, std::vector<Source *> sources, std::vector<System *> systems)
+  int init(Config *config, std::vector<Source *> sources, std::vector<System *> systems) override
   {
+    frequency_format = config->frequency_format; 
     this->config = config;
 
     return 0;
   }
 
-  int start()
+  int start() override
   {
     open_connection();
     return 0;
   }
 
-  int setup_recorder(Recorder *recorder)
+  int setup_recorder(Recorder *recorder) override
   {
     this->send_recorder(recorder);
     return 0;
   }
 
-  int setup_system(System *system)
+  int setup_system(System *system) override
   {
     this->send_system(system);
     return 0;
   }
 
-  int setup_systems(std::vector<System *> systems)
+  int setup_systems(std::vector<System *> systems) override
   {
 
     this->send_systems(systems);
     return 0;
   }
 
-  int setup_config(std::vector<Source *> sources, std::vector<System *> systems)
+  int setup_config(std::vector<Source *> sources, std::vector<System *> systems) override
   {
     send_config(sources, systems);
     return 0;
@@ -411,7 +412,7 @@ public:
         new Mqtt_Status());
   }
 
-  int parse_config(boost::property_tree::ptree &cfg)
+  int parse_config(boost::property_tree::ptree &cfg) override
   {
 
     this->mqtt_broker = cfg.get<std::string>("broker", "tcp://localhost:1883");
@@ -425,8 +426,6 @@ public:
     return 0;
   }
 
-  int stop() { return 0; }
-  int setup_sources(std::vector<Source *> sources) { return 0; }
 };
 
 BOOST_DLL_ALIAS(
