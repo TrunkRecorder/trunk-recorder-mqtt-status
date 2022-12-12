@@ -56,7 +56,7 @@ See the included [config.json](./config.json) as an example of how to load this 
     "plugins": [
     {
         "name": "example plugin",
-        "library": "libmqtt_plugin.so",
+        "library": "libmqtt_status_plugin.so",
         "broker": "tcp://io.adafruit.com:1883",
         "topic": "robotastic/feeds",
         "username": "robotastic",
