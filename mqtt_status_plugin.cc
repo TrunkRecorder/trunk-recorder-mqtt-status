@@ -308,11 +308,11 @@ public:
     {
       mqtt::message_ptr pubmsg = mqtt::make_message(object_topic, stats_str.str());
       pubmsg->set_qos(QOS);
-      client->publish(pubmsg)->wait_for(TIMEOUT);
+      client->publish(pubmsg); //->wait_for(TIMEOUT);
     }
     catch (const mqtt::exception &exc)
     {
-      cerr << exc.what() << endl;
+      BOOST_LOG_TRIVIAL(error) << "MQTT Status Plugin - " <<exc.what() << endl;
     }
 
     return 0; 
@@ -331,13 +331,13 @@ public:
   {
     const char *LWT_PAYLOAD = "Last will and testament.";
     // set up access channels to only log interesting things
-    client = new mqtt::async_client(this->mqtt_broker, "test", "./store");
+    client = new mqtt::async_client(this->mqtt_broker, "tr-status", "./store");
 
     mqtt::connect_options connOpts;
 
     if ((this->username != "") && (this->password != ""))
     {
-      BOOST_LOG_TRIVIAL(info) << "\nSetting MQTT Broker username and password..." << endl;
+      BOOST_LOG_TRIVIAL(info) << " MQTT Status Plugin - \tSetting MQTT Broker username and password..." << endl;
       connOpts = mqtt::connect_options_builder().clean_session().user_name(this->username).password(this->password).will(mqtt::message("final", LWT_PAYLOAD, QOS)).finalize();
       ;
     }
@@ -351,13 +351,14 @@ public:
     sslopts.set_verify(false);
     sslopts.set_enable_server_cert_auth(false);
     connOpts.set_ssl(sslopts);
+    connOpts.set_automatic_reconnect(10, 40); // this seems to be a blocking reconnect
     try
     {
-      BOOST_LOG_TRIVIAL(info) << "\nConnecting..." << endl;
+      BOOST_LOG_TRIVIAL(info) << " MQTT Status Plugin - \tConnecting...";
       mqtt::token_ptr conntok = client->connect(connOpts);
-      BOOST_LOG_TRIVIAL(info) << "Waiting for the connection..." << endl;
+      BOOST_LOG_TRIVIAL(info) << " MQTT Status Plugin - \tWaiting for the connection...";
       conntok->wait();
-      BOOST_LOG_TRIVIAL(info) << "  ...OK" << endl;
+      BOOST_LOG_TRIVIAL(info) << " MQTT Status Plugin - \t ...OK";
       m_open = true;
     }
     catch (const mqtt::exception &exc)
@@ -416,11 +417,11 @@ public:
   {
 
     this->mqtt_broker = cfg.get<std::string>("broker", "tcp://localhost:1883");
-    BOOST_LOG_TRIVIAL(info) << "MQTT Broker: " << this->mqtt_broker;
+    BOOST_LOG_TRIVIAL(info) << " MQTT Status Plugin Broker: " << this->mqtt_broker;
     this->topic = cfg.get<std::string>("topic", "");
-    BOOST_LOG_TRIVIAL(info) << "MQTT Topic: " << this->topic;
+    BOOST_LOG_TRIVIAL(info) << " MQTT Status Plugin Topic: " << this->topic;
     this->username = cfg.get<std::string>("username", "");
-    BOOST_LOG_TRIVIAL(info) << "MQTT Broker Username: " << this->username;
+    BOOST_LOG_TRIVIAL(info) << " MQTT Status Plugin Broker Username: " << this->username;
     this->password = cfg.get<std::string>("password", "");
 
     return 0;
