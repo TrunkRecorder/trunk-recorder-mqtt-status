@@ -47,6 +47,7 @@ class Mqtt_Status : public Plugin_Api, public virtual mqtt::callback, public vir
   std::string username;
   std::string password;
   std::string topic;
+  std::string clientid;
   mqtt::async_client *client;
 
 protected:
@@ -214,7 +215,21 @@ public:
       root.put("broadcast_signals", this->config->broadcast_signals);
     }
 
-    send_object(root, "config", "config");
+    send_object(root, "config", "config", true);
+
+    // Send the recorders in addition to the config, cause there isn't a better place to do it.
+    std::vector<Recorder *> recorders;
+
+    for (std::vector<Source *>::iterator it = sources.begin(); it != sources.end(); it++) {
+      Source *source = *it;
+
+      std::vector<Recorder *> sourceRecorders = source->get_recorders();
+
+      recorders.insert(recorders.end(), sourceRecorders.begin(), sourceRecorders.end());
+    }
+
+    send_recorders(recorders);
+    
     m_config_sent = true;
   }
 
@@ -228,7 +243,7 @@ public:
       System *system = *it;
       node.push_back(std::make_pair("", system->get_stats()));
     }
-    return send_object(node, "systems", "systems");
+    return send_object(node, "systems", "systems", true);
   }
 
   int send_system(System *system)
@@ -264,7 +279,7 @@ public:
       node.push_back(std::make_pair("", recorder->get_stats()));
     }
 
-    return send_object(node, "recorders", "recorders");
+    return send_object(node, "recorders", "recorders",true);
   }
 
   int call_start(Call *call) override
@@ -285,7 +300,7 @@ public:
     return send_object(recorder->get_stats(), "recorder", "recorder");
   }
 
-  int send_object(boost::property_tree::ptree data, std::string name, std::string type)
+  int send_object(boost::property_tree::ptree data, std::string name, std::string type, bool retain = false)
   {
 
     if (m_open == false)
@@ -308,6 +323,7 @@ public:
     {
       mqtt::message_ptr pubmsg = mqtt::make_message(object_topic, stats_str.str());
       pubmsg->set_qos(QOS);
+      pubmsg->set_retained(retain);
       client->publish(pubmsg); //->wait_for(TIMEOUT);
     }
     catch (const mqtt::exception &exc)
@@ -331,7 +347,7 @@ public:
   {
     const char *LWT_PAYLOAD = "Last will and testament.";
     // set up access channels to only log interesting things
-    client = new mqtt::async_client(this->mqtt_broker, "tr-status", "./store");
+    client = new mqtt::async_client(this->mqtt_broker, this->clientid, config->capture_dir + "/store");
 
     mqtt::connect_options connOpts;
 
@@ -420,9 +436,13 @@ public:
     BOOST_LOG_TRIVIAL(info) << " MQTT Status Plugin Broker: " << this->mqtt_broker;
     this->topic = cfg.get<std::string>("topic", "");
     BOOST_LOG_TRIVIAL(info) << " MQTT Status Plugin Topic: " << this->topic;
+    this->clientid = cfg.get<std::string>("clientid", "tr-status");
+    BOOST_LOG_TRIVIAL(info) << " MQTT Status Plugin Client ID: " << this->clientid;
     this->username = cfg.get<std::string>("username", "");
     BOOST_LOG_TRIVIAL(info) << " MQTT Status Plugin Broker Username: " << this->username;
     this->password = cfg.get<std::string>("password", "");
+ 
+
 
     return 0;
   }

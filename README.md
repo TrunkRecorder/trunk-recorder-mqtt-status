@@ -43,6 +43,7 @@ sudo make install
 | --------- | :------: | ------------- | ------ | ------------------------------------------------------------ |
 | broker    |    ✓     |   tcp://localhost:1883            | string | The URL for the MQTT Message Broker. It should include the protocol used: **tcp**, **ssl**, **ws**, **wss** and the port, which is generally 1883 for tcp, 8883 for ssl, and 443 for ws. |
 | topic     |    ✓     |               | string | This is the base topic to use. The plugin will create subtopics for the different types of status messages. |
+| clientid  |          | tr-status     | string | Sets the MQTT client ID, only needs to be changed if multiple instances are connecting to one MQTT broker. | 
 | username  |          |               | string | If a username is required for the broker, add it here. |
 | password  |          |               | string | If a password is required for the broker, add it here. |
 
@@ -54,7 +55,7 @@ See the included [config.json](./config.json) as an example of how to load this 
 ```yaml
     "plugins": [
     {
-        "name": "example plugin",
+        "name": "mqtt status",
         "library": "libmqtt_status_plugin.so",
         "broker": "tcp://io.adafruit.com:1883",
         "topic": "robotastic/feeds",
@@ -73,4 +74,27 @@ The Mosquitto MQTT is an easy way to have a local MQTT broker. It can be install
 Starting it on a Mac:
 ```bash
 /opt/homebrew/sbin/mosquitto -c /opt/homebrew/etc/mosquitto/mosquitto.conf
+```
+
+## Docker
+
+The included Dockerfile will allow buliding a trunk-recorder docker image with this plugin included.
+
+`docker-compose` can be used to automate the build and deployment of this image. In the Docker compose file replace the image line with a build line pointing to the location where this repo has been cloned to.   
+
+Docker compose file:
+
+```yaml
+version: '3'
+services:
+  recorder:
+    build: ./trunk-recorder-mqtt-status
+    container_name: trunk-recorder
+    restart: always
+    privileged: true
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+      - /var/run/dbus:/var/run/dbus 
+      - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
+      - ./:/app
 ```

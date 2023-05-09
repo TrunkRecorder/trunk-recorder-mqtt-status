@@ -134,8 +134,8 @@ find_package(LibHackRF)
 find_package(LibUHD)
 find_package(OpenSSL REQUIRED)
 find_package(CURL REQUIRED)
-find_library(paho-mqttpp3 NAMES libpaho-mqttpp3.a REQUIRED)
-find_library(paho-mqtt3a NAMES libpaho-mqtt3as.a REQUIRED)
+find_library(paho-mqttpp3 NAMES libpaho-mqttpp3.a libpaho-mqttpp3.so REQUIRED)
+find_library(paho-mqtt3a NAMES libpaho-mqtt3as.a libpaho-mqtt3as.so REQUIRED)
 
 ########################################################################
 # Setup boost
@@ -176,6 +176,7 @@ if(NOT Boost_FOUND)
 endif()
 
 ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK)
+ADD_DEFINITIONS(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 add_definitions(-DGNURADIO_VERSION=${GNURADIO_VERSION})
 
 ########################################################################
